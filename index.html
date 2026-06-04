@@ -560,6 +560,7 @@ const RAW = [
   ["Gerald Everett","LAR","2010s","TE",2019,16,37,408,2,0],
   // BAL-2010s
   ["Justin Forsett","BAL","2010s","RB",2014,14,1266,8,5.4,0],
+  ["Lamar Jackson","BAL","2010s","QB",2019,15,3127,36,6,113.3],
   ["Mike Wallace","BAL","2010s","WR",2016,16,72,1017,4,0],
   ["Mark Andrews","BAL","2010s","TE",2019,15,64,852,10,0],
   // PHI-2010s
@@ -567,6 +568,7 @@ const RAW = [
   ["Nelson Agholor","PHI","2010s","WR",2017,16,62,768,8,0],
   // BUF-2010s
   ["Tyrod Taylor","BUF","2010s","QB",2016,15,3023,17,6,89.7],
+  ["Josh Allen","BUF","2010s","QB",2019,16,3089,20,9,85.3],
   ["LeSean McCoy","BUF","2010s","RB",2016,15,1267,13,5.4,0],
   // JAX-2010s
   ["Blake Bortles","JAX","2010s","QB",2015,16,4428,35,18,88.2],
@@ -1088,7 +1090,7 @@ function RunItPerfect() {
                   <button onClick={() => {
                     const full = shareText + '\n' + shareUrl;
                     if (navigator.share) {
-                      navigator.share({ text: full, url: shareUrl }).catch(() => {});
+                      navigator.share({ text: full }).catch(() => {});
                     } else {
                       navigator.clipboard.writeText(full).then(() => {
                         const btn = document.getElementById('copy-btn');
