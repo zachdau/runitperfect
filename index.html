@@ -1060,30 +1060,53 @@ function RunItPerfect() {
             </div>
           </div>
 
-          <div className="flex gap-3 mt-6">
-            <button onClick={() => {
-              const rosterText = roster.filter(Boolean).map((p, i) =>
-                `${SLOT_LABELS[i]}: ${p.n} (${p.t} ${p.y})`
-              ).join('\n');
-              const text = `${isPerfect ? '🏆 ' : ''}${record.wins}-${record.losses} | ${points} PTS\n${rosterText}\n\nCan you run it perfect?\nrunitperfect.com`;
-              if (navigator.share) {
-                navigator.share({ text }).catch(() => {});
-              } else {
-                navigator.clipboard.writeText(text).then(() => {
-                  const btn = document.getElementById('share-btn');
-                  if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => btn.textContent = 'SHARE', 1500); }
-                }).catch(() => {});
-              }
-            }}
-              id="share-btn"
-              className="flex-1 border border-gray-600 hover:border-gray-400 text-white font-bold py-3 rounded-lg transition-all active:scale-95">
-              SHARE
-            </button>
-            <button onClick={resetGame}
-              className="flex-1 bg-green-500 hover:bg-green-400 text-gray-950 font-bold py-3 rounded-lg transition-all active:scale-95">
-              PLAY AGAIN
-            </button>
-          </div>
+          {(() => {
+            const rosterText = roster.filter(Boolean).map((p, i) =>
+              `${SLOT_LABELS[i]}: ${p.n} (${p.t} ${p.y})`
+            ).join('\n');
+            const shareText = `${isPerfect ? '🏆 ' : ''}${record.wins}-${record.losses} | ${points} PTS\n${rosterText}\n\nCan you run it perfect?`;
+            const shareUrl = 'https://runitperfect.com';
+            const tweetText = encodeURIComponent(`${isPerfect ? '🏆 ' : ''}My offense went ${record.wins}-${record.losses} (${points} PTS)\n\n${roster.filter(Boolean).map((p, i) => `${SLOT_LABELS[i]}: ${p.n}`).join('\n')}\n\nCan you run it perfect?`);
+            return (
+              <div className="mt-6 space-y-3">
+                <div className="flex gap-2">
+                  <button onClick={() => window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(shareUrl)}`, '_blank')}
+                    className="flex-1 bg-black border border-gray-700 hover:border-gray-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
+                    Post on X
+                  </button>
+                  <button onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank')}
+                    className="flex-1 bg-[#1877F2] hover:bg-[#166FE5] text-white font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
+                    Facebook
+                  </button>
+                  <button onClick={() => window.open(`https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(`My offense went ${record.wins}-${record.losses} — Can you run it perfect?`)}`, '_blank')}
+                    className="flex-1 bg-[#FF4500] hover:bg-[#E03D00] text-white font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
+                    Reddit
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => {
+                    const full = shareText + '\n' + shareUrl;
+                    if (navigator.share) {
+                      navigator.share({ text: full }).catch(() => {});
+                    } else {
+                      navigator.clipboard.writeText(full).then(() => {
+                        const btn = document.getElementById('copy-btn');
+                        if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => btn.textContent = 'COPY RESULT', 1500); }
+                      }).catch(() => {});
+                    }
+                  }}
+                    id="copy-btn"
+                    className="flex-1 border border-gray-700 hover:border-gray-500 text-gray-300 font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
+                    COPY RESULT
+                  </button>
+                  <button onClick={resetGame}
+                    className="flex-1 bg-green-500 hover:bg-green-400 text-gray-950 font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
+                    PLAY AGAIN
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {isPerfect && (
             <div className="text-center mt-6">
