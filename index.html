@@ -43,7 +43,7 @@ const RAW = [
   ["Drew Brees","NO","2000s","QB",2008,16,5069,34,17,96.2],
   ["Daunte Culpepper","MIN","2000s","QB",2004,16,4717,39,11,110.9],
   ["Kurt Warner","ARI","2000s","QB",2008,16,4583,30,14,96.9],
-  ["Rich Gannon","OAK","2000s","QB",2002,16,4689,26,10,97.3],
+  ["Rich Gannon","LV","2000s","QB",2002,16,4689,26,10,97.3],
   ["Donovan McNabb","PHI","2000s","QB",2004,15,3875,31,8,104.7],
   ["Carson Palmer","CIN","2000s","QB",2005,16,3836,32,12,101.1],
   ["Tony Romo","DAL","2000s","QB",2007,16,4211,36,19,97.4],
@@ -52,10 +52,10 @@ const RAW = [
   ["Matt Hasselbeck","SEA","2000s","QB",2005,16,3459,24,9,98.2],
   ["Jake Delhomme","CAR","2000s","QB",2005,16,3421,24,16,87.3],
   ["Steve McNair","TEN","2000s","QB",2003,14,3215,24,7,100.4],
-  ["Marc Bulger","STL","2000s","QB",2003,16,3845,22,22,81.4],
+  ["Marc Bulger","LAR","2000s","QB",2003,16,3845,22,22,81.4],
   ["Trent Green","KC","2000s","QB",2003,16,4039,24,12,92.6],
   // RBs
-  ["LaDainian Tomlinson","SD","2000s","RB",2006,16,1815,28,5.2,0],
+  ["LaDainian Tomlinson","LAC","2000s","RB",2006,16,1815,28,5.2,0],
   ["Priest Holmes","KC","2000s","RB",2002,14,1615,21,4.7,0],
   ["Shaun Alexander","SEA","2000s","RB",2005,16,1880,27,5.1,0],
   ["Jamal Lewis","BAL","2000s","RB",2003,16,2066,14,5.3,0],
@@ -71,12 +71,12 @@ const RAW = [
   ["Frank Gore","SF","2000s","RB",2006,16,1695,8,5.4,0],
   ["Willis McGahee","BUF","2000s","RB",2004,14,1128,13,4.1,0],
   ["Warrick Dunn","ATL","2000s","RB",2000,16,1234,7,4.8,0],
-  ["Steven Jackson","STL","2000s","RB",2006,16,1528,13,4.4,0],
-  ["Marshall Faulk","STL","2000s","RB",2000,14,1359,18,5.4,0],
+  ["Steven Jackson","LAR","2000s","RB",2006,16,1528,13,4.4,0],
+  ["Marshall Faulk","LAR","2000s","RB",2000,14,1359,18,5.4,0],
   // WRs
   ["Randy Moss","MIN","2000s","WR",2003,16,111,1632,17,0],
   ["Marvin Harrison","IND","2000s","WR",2001,16,109,1524,15,0],
-  ["Torry Holt","STL","2000s","WR",2003,16,117,1696,12,0],
+  ["Torry Holt","LAR","2000s","WR",2003,16,117,1696,12,0],
   ["Terrell Owens","PHI","2000s","WR",2004,14,77,1200,14,0],
   ["Chad Johnson","CIN","2000s","WR",2006,16,87,1369,7,0],
   ["Steve Smith","CAR","2000s","WR",2005,16,103,1563,12,0],
@@ -86,7 +86,7 @@ const RAW = [
   ["Andre Johnson","HOU","2000s","WR",2008,16,115,1575,8,0],
   ["Donald Driver","GB","2000s","WR",2006,16,92,1295,8,0],
   ["Anquan Boldin","ARI","2000s","WR",2005,14,102,1402,7,0],
-  ["Isaac Bruce","STL","2000s","WR",2000,16,87,1471,9,0],
+  ["Isaac Bruce","LAR","2000s","WR",2000,16,87,1471,9,0],
   ["Santana Moss","WAS","2000s","WR",2005,16,84,1483,9,0],
   ["Derrick Mason","TEN","2000s","WR",2003,16,95,1303,8,0],
   ["Rod Smith","DEN","2000s","WR",2001,16,113,1343,11,0],
@@ -104,7 +104,7 @@ const RAW = [
   ["Lee Evans","BUF","2000s","WR",2006,16,82,1292,8,0],
   // TEs
   ["Tony Gonzalez","KC","2000s","TE",2004,16,102,1258,7,0],
-  ["Antonio Gates","SD","2000s","TE",2004,15,81,964,13,0],
+  ["Antonio Gates","LAC","2000s","TE",2004,15,81,964,13,0],
   ["Jason Witten","DAL","2000s","TE",2007,16,96,1145,7,0],
   ["Jeremy Shockey","NYG","2000s","TE",2002,15,74,894,2,0],
   ["Todd Heap","BAL","2000s","TE",2005,16,75,855,7,0],
@@ -140,7 +140,7 @@ const RAW = [
   ["Joe Flacco","BAL","2010s","QB",2014,16,3986,27,12,91.0],
   ["Ryan Fitzpatrick","NYJ","2010s","QB",2015,11,2483,17,14,88.0],
   ["Jameis Winston","TB","2010s","QB",2019,16,5109,33,30,84.3],
-  ["Sam Bradford","STL","2010s","QB",2012,16,3702,21,13,82.6],
+  ["Sam Bradford","LAR","2010s","QB",2012,16,3702,21,13,82.6],
   ["Teddy Bridgewater","MIN","2010s","QB",2015,16,3231,14,9,88.7],
   // RBs
   ["Adrian Peterson","MIN","2010s","RB",2012,16,2097,12,6.0,0],
@@ -221,13 +221,13 @@ const RAW = [
   ["Eric Ebron","IND","2010s","TE",2018,16,66,750,13,0],
   ["Julius Thomas","DEN","2010s","TE",2014,15,43,489,12,0],
   ["Owen Daniels","HOU","2010s","TE",2012,16,62,716,6,0],
-  ["Jared Cook","OAK","2010s","TE",2018,16,68,896,6,0],
+  ["Jared Cook","LV","2010s","TE",2018,16,68,896,6,0],
   ["Kyle Rudolph","MIN","2010s","TE",2016,16,83,840,7,0],
   ["Marcedes Lewis","JAX","2010s","TE",2010,16,58,700,10,0],
   ["Charles Clay","BUF","2010s","TE",2015,16,51,528,3,0],
   ["Dennis Pitta","BAL","2010s","TE",2012,15,61,669,7,0],
   ["Vernon Davis","SF","2010s","TE",2013,16,52,850,13,0],
-  ["Antonio Gates","SD","2010s","TE",2014,16,69,821,12,0],
+  ["Antonio Gates","LAC","2010s","TE",2014,16,69,821,12,0],
 
   // ===== 2020s =====
   // QBs
@@ -388,12 +388,12 @@ const RAW = [
   ["Brenton Strange","JAX","2020s","TE",2024,17,36,478,5,0],
 
   // ===== EXPANSION — filling thin combos =====
-  // OAK-2000s
-  ["Jerry Rice","OAK","2000s","WR",2002,16,92,1211,7,0],
-  ["Tim Brown","OAK","2000s","WR",2001,16,91,1165,9,0],
-  ["Charlie Garner","OAK","2000s","RB",2000,16,1142,7,4.2,0],
-  ["Tyrone Wheatley","OAK","2000s","RB",2001,12,887,9,4.5,0],
-  ["Doug Jolley","OAK","2000s","TE",2003,16,34,380,2,0],
+  // LV-2000s
+  ["Jerry Rice","LV","2000s","WR",2002,16,92,1211,7,0],
+  ["Tim Brown","LV","2000s","WR",2001,16,91,1165,9,0],
+  ["Charlie Garner","LV","2000s","RB",2000,16,1142,7,4.2,0],
+  ["Tyrone Wheatley","LV","2000s","RB",2001,12,887,9,4.5,0],
+  ["Doug Jolley","LV","2000s","TE",2003,16,34,380,2,0],
   // CHI-2000s
   ["Rex Grossman","CHI","2000s","QB",2006,16,3193,23,20,73.9],
   ["Marty Booker","CHI","2000s","WR",2002,16,97,1189,5,0],
@@ -415,29 +415,30 @@ const RAW = [
   ["Mike Alstott","TB","2000s","RB",2000,16,907,10,3.8,0],
   ["Kellen Winslow Jr","TB","2000s","TE",2009,16,57,672,5,0],
   ["Joey Galloway","TB","2000s","WR",2005,16,83,1287,10,0],
-  // STL-2010s
-  ["Zac Stacy","STL","2010s","RB",2013,14,973,7,3.9,0],
-  ["Chris Givens","STL","2010s","WR",2012,16,42,698,3,0],
-  ["Jared Cook","STL","2010s","TE",2013,16,51,671,5,0],
-  ["Tavon Austin","STL","2010s","WR",2014,16,31,509,1,0],
-  ["Stedman Bailey","STL","2010s","WR",2014,14,38,435,1,0],
+  // LAR-2010s
+  ["Zac Stacy","LAR","2010s","RB",2013,14,973,7,3.9,0],
+  ["Todd Gurley","LAR","2010s","RB",2015,13,1106,10,4.8,0],
+  ["Chris Givens","LAR","2010s","WR",2012,16,42,698,3,0],
+  ["Jared Cook","LAR","2010s","TE",2013,16,51,671,5,0],
+  ["Tavon Austin","LAR","2010s","WR",2014,16,31,509,1,0],
+  ["Stedman Bailey","LAR","2010s","WR",2014,14,38,435,1,0],
   // ARI-2010s
   ["Carson Palmer","ARI","2010s","QB",2015,16,4671,35,11,104.6],
   ["David Johnson","ARI","2010s","RB",2016,16,1239,16,4.2,0],
   ["Michael Floyd","ARI","2010s","WR",2013,16,65,1041,5,0],
   ["John Brown","ARI","2010s","WR",2015,15,65,1003,7,0],
   ["Jermaine Gresham","ARI","2010s","TE",2017,16,33,322,2,0],
-  // OAK-2010s
-  ["Derek Carr","OAK","2010s","QB",2016,16,3937,28,6,96.7],
-  ["Latavius Murray","OAK","2010s","RB",2015,16,1066,6,4.0,0],
-  ["Michael Crabtree","OAK","2010s","WR",2016,16,89,1003,8,0],
-  ["Amari Cooper","OAK","2010s","WR",2016,16,83,1153,5,0],
-  // SD-2010s
-  ["Philip Rivers","SD","2010s","QB",2013,16,4478,32,11,105.5],
-  ["Ryan Mathews","SD","2010s","RB",2013,16,1255,6,4.4,0],
-  ["Malcom Floyd","SD","2010s","WR",2013,16,56,856,6,0],
-  ["Danny Woodhead","SD","2010s","RB",2015,16,539,6,4.3,0],
-  ["Vincent Jackson","SD","2010s","WR",2011,16,60,1106,9,0],
+  // LV-2010s
+  ["Derek Carr","LV","2010s","QB",2016,16,3937,28,6,96.7],
+  ["Latavius Murray","LV","2010s","RB",2015,16,1066,6,4.0,0],
+  ["Michael Crabtree","LV","2010s","WR",2016,16,89,1003,8,0],
+  ["Amari Cooper","LV","2010s","WR",2016,16,83,1153,5,0],
+  // LAC-2010s
+  ["Philip Rivers","LAC","2010s","QB",2013,16,4478,32,11,105.5],
+  ["Ryan Mathews","LAC","2010s","RB",2013,16,1255,6,4.4,0],
+  ["Malcom Floyd","LAC","2010s","WR",2013,16,56,856,6,0],
+  ["Danny Woodhead","LAC","2010s","RB",2015,16,539,6,4.3,0],
+  ["Vincent Jackson","LAC","2010s","WR",2011,16,60,1106,9,0],
   // NO-2000s
   ["Deuce McAllister","NO","2000s","RB",2003,16,1641,8,4.6,0],
   ["Marques Colston","NO","2000s","WR",2007,16,98,1202,11,0],
@@ -464,9 +465,9 @@ const RAW = [
   ["Stephen Davis","CAR","2000s","RB",2003,16,1444,8,3.9,0],
   ["Muhsin Muhammad","CAR","2000s","WR",2004,16,93,1405,16,0],
   ["Wesley Walls","CAR","2000s","TE",2002,16,44,529,5,0],
-  // SD-2000s
-  ["Drew Brees","SD","2000s","QB",2004,15,3159,27,7,104.8],
-  ["Michael Turner","SD","2000s","RB",2007,16,677,2,3.6,0],
+  // LAC-2000s
+  ["Drew Brees","LAC","2000s","QB",2004,15,3159,27,7,104.8],
+  ["Michael Turner","LAC","2000s","RB",2007,16,677,2,3.6,0],
   // BAL-2000s
   ["Kyle Boller","BAL","2000s","QB",2004,16,2559,13,11,70.9],
   ["Derrick Mason","BAL","2000s","WR",2005,16,86,1073,3,0],
