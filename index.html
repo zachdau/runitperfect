@@ -767,26 +767,53 @@ function RunItPerfect() {
     }
   }, [roster, round]);
 
-  const [pendingRespin, setPendingRespin] = useState(false);
-
   const doRespin = useCallback(() => {
     if (reSpinUsed) return;
     setReSpinUsed(true);
-    const key = spin?.key;
-    if (key) {
-      setUsedCombos(prev => prev.filter(k => k !== key));
-    }
-    setSpin(null);
+    setScreen("spinning");
     setSpinDisplay(null);
-    setPendingRespin(true);
-  }, [reSpinUsed, spin]);
 
-  useEffect(() => {
-    if (pendingRespin) {
-      setPendingRespin(false);
-      doSpin();
-    }
-  }, [pendingRespin, doSpin]);
+    // Compute valid combos directly to avoid stale closure issues
+    const currentKey = spin?.key;
+    const newUsedCombos = usedCombos.filter(k => k !== currentKey);
+    setUsedCombos(newUsedCombos);
+
+    const uf = [];
+    if (!roster[0]) uf.push("QB");
+    if (!roster[1]) uf.push("RB");
+    if (!roster[2]) uf.push("WR");
+    if (!roster[3]) uf.push("TE");
+    if (!roster[4]) uf.push("WR");
+    const ufs = [...new Set(uf)];
+
+    const seen = new Set();
+    const valid = [];
+    PLAYERS.forEach(p => {
+      const key = `${p.t}-${p.d}`;
+      if (!newUsedCombos.includes(key) && ufs.includes(p.p) && !seen.has(key) && p.g >= 8) {
+        seen.add(key);
+        valid.push({ key, team: p.t, decade: p.d });
+      }
+    });
+
+    if (valid.length === 0) return;
+    const target = valid[Math.floor(Math.random() * valid.length)];
+
+    let ticks = 0;
+    if (spinRef.current) clearInterval(spinRef.current);
+    spinRef.current = setInterval(() => {
+      const rand = valid[Math.floor(Math.random() * valid.length)];
+      setSpinDisplay(rand);
+      ticks++;
+      if (ticks > 15) {
+        clearInterval(spinRef.current);
+        setSpinDisplay(target);
+        setSpin(target);
+        setUsedCombos(prev => [...prev, target.key]);
+        setTimeout(() => setScreen("picking"), 600);
+      }
+    }, 80);
+  }, [reSpinUsed, spin, usedCombos, roster]);
 
   const resetGame = () => {
     setScreen("menu");
