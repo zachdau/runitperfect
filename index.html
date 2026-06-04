@@ -413,7 +413,7 @@ const RAW = [
   // TB-2000s
   ["Brad Johnson","TB","2000s","QB",2002,16,3049,22,6,92.9],
   ["Mike Alstott","TB","2000s","RB",2000,16,907,10,3.8,0],
-  ["Kellen Winslow II","TB","2000s","TE",2009,16,57,672,5,0],
+  ["Kellen Winslow Jr","TB","2000s","TE",2009,16,57,672,5,0],
   ["Joey Galloway","TB","2000s","WR",2005,16,83,1287,10,0],
   // STL-2010s
   ["Zac Stacy","STL","2010s","RB",2013,14,973,7,3.9,0],
@@ -453,7 +453,7 @@ const RAW = [
   // CIN-2000s
   ["Rudi Johnson","CIN","2000s","RB",2004,16,1454,12,4.1,0],
   ["T.J. Houshmandzadeh","CIN","2000s","WR",2007,16,112,1143,12,0],
-  ["Kellen Winslow","CIN","2000s","TE",2009,12,42,428,2,0],
+
   // DAL-2000s
   ["Julius Jones","DAL","2000s","RB",2006,16,1084,4,4.2,0],
   ["Terry Glenn","DAL","2000s","WR",2005,16,62,1136,7,0],
@@ -924,7 +924,7 @@ function RunItPerfect() {
             </button>
           )}
 
-          <div className="text-gray-600 text-xs uppercase tracking-wider mb-3 font-mono">Select a player</div>
+          <div className="text-gray-600 text-xs uppercase tracking-wider mb-3 font-mono">Select a player — {available.length} available</div>
           <div className="space-y-2">
             {available.map(p => (
               <button key={p.id} onClick={() => pickPlayer(p)}
@@ -1061,6 +1061,24 @@ function RunItPerfect() {
           </div>
 
           <div className="flex gap-3 mt-6">
+            <button onClick={() => {
+              const rosterText = roster.filter(Boolean).map((p, i) =>
+                `${SLOT_LABELS[i]}: ${p.n} (${p.t} ${p.y})`
+              ).join('\n');
+              const text = `${isPerfect ? '🏆 ' : ''}${record.wins}-${record.losses} | ${points} PTS\n${rosterText}\n\nCan you run it perfect?\nrunitperfect.com`;
+              if (navigator.share) {
+                navigator.share({ text }).catch(() => {});
+              } else {
+                navigator.clipboard.writeText(text).then(() => {
+                  const btn = document.getElementById('share-btn');
+                  if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => btn.textContent = 'SHARE', 1500); }
+                }).catch(() => {});
+              }
+            }}
+              id="share-btn"
+              className="flex-1 border border-gray-600 hover:border-gray-400 text-white font-bold py-3 rounded-lg transition-all active:scale-95">
+              SHARE
+            </button>
             <button onClick={resetGame}
               className="flex-1 bg-green-500 hover:bg-green-400 text-gray-950 font-bold py-3 rounded-lg transition-all active:scale-95">
               PLAY AGAIN
