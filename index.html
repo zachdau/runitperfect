@@ -8,6 +8,8 @@
 <meta property="og:title" content="Run It Perfect">
 <meta property="og:description" content="Draft 5 NFL offensive legends. Simulate a full season. Can you go 17-0?">
 <meta property="og:url" content="https://runitperfect.com">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-R3WFH6MS29"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-R3WFH6MS29');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
@@ -757,6 +759,7 @@ function RunItPerfect() {
         if (idx >= 17) {
           clearInterval(simInterval);
           setRecord({ wins, losses, games });
+          if(window.gtag)gtag('event','game_complete',{wins:wins,losses:losses,points:pts,mode:mode,perfect:wins===17});
           setTimeout(() => setScreen("results"), 800);
         }
       }, 180);
@@ -768,6 +771,7 @@ function RunItPerfect() {
   const doRespin = useCallback(() => {
     if (reSpinUsed) return;
     setReSpinUsed(true);
+    if(window.gtag)gtag('event','respin_used');
     setScreen("spinning");
     setSpinDisplay(null);
 
@@ -858,12 +862,12 @@ function RunItPerfect() {
         <p className="text-gray-500 text-sm max-w-sm mx-auto mb-10 leading-relaxed">
           Draft 5 NFL offensive legends across decades. A simulation engine runs your squad through a full 17-game season. The goal: go 17-0.
         </p>
-        <button onClick={() => { setMode("classic"); doSpin(); }}
+        <button onClick={() => { setMode("classic"); doSpin(); if(window.gtag)gtag('event','game_start',{mode:'classic'}); }}
           className="bg-green-500 hover:bg-green-400 text-gray-950 font-bold text-lg px-10 py-4 rounded-lg transition-all active:scale-95 mb-3 w-64">
           PLAY CLASSIC
         </button>
         <br />
-        <button onClick={() => { setMode("blind"); doSpin(); }}
+        <button onClick={() => { setMode("blind"); doSpin(); if(window.gtag)gtag('event','game_start',{mode:'blind'}); }}
           className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white font-semibold text-sm px-10 py-3 rounded-lg transition-all active:scale-95 w-64">
           PLAY BLIND (stats hidden)
         </button>
@@ -1074,15 +1078,15 @@ function RunItPerfect() {
             return (
               <div className="mt-6 space-y-2">
                 <div className="flex gap-2">
-                  <button onClick={() => window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(shareUrl)}`, '_blank')}
+                  <button onClick={() => { window.open(`https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(shareUrl)}`, '_blank'); if(window.gtag)gtag('event','share_click',{platform:'x'}); }}
                     className="flex-1 bg-black border border-gray-700 hover:border-gray-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
                     Post on X
                   </button>
-                  <button onClick={() => window.open(`https://wa.me/?text=${waText}`, '_blank')}
+                  <button onClick={() => { window.open(`https://wa.me/?text=${waText}`, '_blank'); if(window.gtag)gtag('event','share_click',{platform:'whatsapp'}); }}
                     className="flex-1 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
                     WhatsApp
                   </button>
-                  <button onClick={() => window.open(`https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(`My offense went ${record.wins}-${record.losses} — Can you run it perfect?`)}`, '_blank')}
+                  <button onClick={() => { window.open(`https://www.reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(`My offense went ${record.wins}-${record.losses} — Can you run it perfect?`)}`, '_blank'); if(window.gtag)gtag('event','share_click',{platform:'reddit'}); }}
                     className="flex-1 bg-[#FF4500] hover:bg-[#E03D00] text-white font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
                     Reddit
                   </button>
@@ -1090,6 +1094,7 @@ function RunItPerfect() {
                 <div className="flex gap-2">
                   <button onClick={() => {
                     const full = shareText + '\n' + shareUrl;
+                    if(window.gtag)gtag('event','share_click',{platform:'copy_share'});
                     if (navigator.share) {
                       navigator.share({ text: full }).catch(() => {});
                     } else {
