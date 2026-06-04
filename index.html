@@ -561,6 +561,8 @@ function RunItPerfect() {
     }
   }, [roster, round]);
 
+  const [pendingRespin, setPendingRespin] = useState(false);
+
   const doRespin = useCallback(() => {
     if (reSpinUsed) return;
     setReSpinUsed(true);
@@ -570,8 +572,15 @@ function RunItPerfect() {
     }
     setSpin(null);
     setSpinDisplay(null);
-    setTimeout(() => doSpin(), 100);
-  }, [reSpinUsed, spin, doSpin]);
+    setPendingRespin(true);
+  }, [reSpinUsed, spin]);
+
+  useEffect(() => {
+    if (pendingRespin) {
+      setPendingRespin(false);
+      doSpin();
+    }
+  }, [pendingRespin, doSpin]);
 
   const resetGame = () => {
     setScreen("menu");
