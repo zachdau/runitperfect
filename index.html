@@ -22,6 +22,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   * { -webkit-tap-highlight-color: transparent; }
   body { margin: 0; background: #030712; }
@@ -669,6 +670,7 @@ function RunItPerfect() {
   const [points, setPoints] = useState(0);
   const [mode, setMode] = useState("classic"); // classic or blind
   const spinRef = useRef(null);
+  const resultsRef = useRef(null);
 
   const unfilledPositions = useCallback(() => {
     const u = [];
@@ -1037,7 +1039,7 @@ function RunItPerfect() {
       <div className="min-h-screen bg-gray-950 p-4 sm:p-6">
         <div className="max-w-md mx-auto">
           {/* Results Card */}
-          <div className={`rounded-2xl p-6 border ${isPerfect ? 'bg-gradient-to-b from-yellow-500/10 to-gray-900 border-yellow-500/30' : 'bg-gray-900 border-gray-700'}`}>
+          <div ref={resultsRef} className={`rounded-2xl p-6 border ${isPerfect ? 'bg-gradient-to-b from-yellow-500/10 to-gray-900 border-yellow-500/30' : 'bg-gray-900 border-gray-700'}`}>
             <div className="text-center mb-6">
               <div className={`text-xs tracking-[0.3em] uppercase mb-2 font-mono ${isPerfect ? 'text-yellow-400' : 'text-gray-600'}`}>
                 {isPerfect ? 'PERFECT SEASON' : 'SEASON RESULT'}
@@ -1123,6 +1125,22 @@ function RunItPerfect() {
                     PLAY AGAIN
                   </button>
                 </div>
+                <button onClick={() => {
+                  if (!resultsRef.current) return;
+                  const btn = document.getElementById('save-btn');
+                  if (btn) btn.textContent = 'SAVING...';
+                  html2canvas(resultsRef.current, { backgroundColor: '#030712', scale: 2 }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `runitperfect-${record.wins}-${record.losses}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    if (btn) { btn.textContent = 'SAVED!'; setTimeout(() => btn.textContent = 'SAVE IMAGE', 1500); }
+                  }).catch(() => { if (btn) btn.textContent = 'SAVE IMAGE'; });
+                }}
+                  id="save-btn"
+                  className="w-full border border-gray-700 hover:border-gray-500 text-gray-300 font-bold py-3 rounded-lg transition-all active:scale-95 text-sm">
+                  SAVE IMAGE
+                </button>
                 <div className="text-center text-gray-700 text-xs mt-1">On mobile, SHARE / COPY opens Sleeper, iMessage, and more</div>
               </div>
             );
