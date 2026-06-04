@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Run It Perfect — Can Your Offense Go Undefeated?</title>
+<meta name="description" content="Draft 5 NFL offensive legends and simulate a 17-game season. Can you go 17-0?">
+<meta property="og:title" content="Run It Perfect">
+<meta property="og:description" content="Draft 5 NFL offensive legends. Simulate a full season. Can you go 17-0?">
+<meta property="og:url" content="https://runitperfect.com">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: #030712; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+
+// ============================================================
+// RUNITPERFECT.COM — NFL Offense-Only Season Simulator
+// PROTOTYPE v0.1 — Player stats are APPROXIMATE and need
+// verification by Rudy before production launch.
+// ============================================================
+
+// -- PLAYER DATABASE (seed data ~50 players) --
+// Format: [name, team, decade, pos, peakYear, gamesStarted, s1, s2, s3, s4]
+// QB: s1=passYds, s2=passTD, s3=INT, s4=rating
+// RB: s1=rushYds, s2=rushTD, s3=ypc, s4=0
+// WR: s1=rec, s2=recYds, s3=recTD, s4=0
+// TE: s1=rec, s2=recYds, s3=recTD, s4=0
+const RAW = [
+  // ===== 2000s =====
+  // QBs
+  ["Tom Brady","NE","2000s","QB",2007,16,4806,50,8,117.2],
+  ["Peyton Manning","IND","2000s","QB",2004,16,4557,49,10,121.1],
+  ["Drew Brees","NO","2000s","QB",2008,16,5069,34,17,96.2],
+  ["Daunte Culpepper","MIN","2000s","QB",2004,16,4717,39,11,110.9],
+  ["Kurt Warner","ARI","2000s","QB",2008,16,4583,30,14,96.9],
+  ["Rich Gannon","OAK","2000s","QB",2002,16,4689,26,10,97.3],
+  ["Donovan McNabb","PHI","2000s","QB",2004,15,3875,31,8,104.7],
+  ["Carson Palmer","CIN","2000s","QB",2005,16,3836,32,12,101.1],
+  ["Tony Romo","DAL","2000s","QB",2007,16,4211,36,19,97.4],
+  ["Ben Roethlisberger","PIT","2000s","QB",2005,12,2385,17,9,98.6],
+  ["Brett Favre","GB","2000s","QB",2004,16,4088,30,17,92.4],
+  ["Matt Hasselbeck","SEA","2000s","QB",2005,16,3459,24,9,98.2],
+  ["Jake Delhomme","CAR","2000s","QB",2005,16,3421,24,16,87.3],
+  ["Steve McNair","TEN","2000s","QB",2003,14,3215,24,7,100.4],
+  ["Marc Bulger","STL","2000s","QB",2003,16,3845,22,22,81.4],
+  ["Trent Green","KC","2000s","QB",2003,16,4039,24,12,92.6],
+  // RBs
+  ["LaDainian Tomlinson","SD","2000s","RB",2006,16,1815,28,5.2,0],
+  ["Priest Holmes","KC","2000s","RB",2002,14,1615,21,4.7,0],
+  ["Shaun Alexander","SEA","2000s","RB",2005,16,1880,27,5.1,0],
+  ["Jamal Lewis","BAL","2000s","RB",2003,16,2066,14,5.3,0],
+  ["Ahman Green","GB","2000s","RB",2003,16,1883,15,5.4,0],
+  ["Clinton Portis","WAS","2000s","RB",2005,16,1516,11,4.4,0],
+  ["Edgerrin James","IND","2000s","RB",2000,16,1709,13,4.7,0],
+  ["Curtis Martin","NYJ","2000s","RB",2004,16,1697,12,4.6,0],
+  ["Tiki Barber","NYG","2000s","RB",2005,16,1860,9,5.2,0],
+  ["Ricky Williams","MIA","2000s","RB",2002,16,1853,16,4.8,0],
+  ["Corey Dillon","NE","2000s","RB",2004,15,1635,12,4.7,0],
+  ["Thomas Jones","CHI","2000s","RB",2005,13,1335,6,4.3,0],
+  ["Fred Taylor","JAX","2000s","RB",2003,14,1572,6,5.0,0],
+  ["Frank Gore","SF","2000s","RB",2006,16,1695,8,5.4,0],
+  ["Willis McGahee","BUF","2000s","RB",2004,14,1128,13,4.1,0],
+  ["Warrick Dunn","ATL","2000s","RB",2000,16,1234,7,4.8,0],
+  ["Steven Jackson","STL","2000s","RB",2006,16,1528,13,4.4,0],
+  ["Marshall Faulk","STL","2000s","RB",2000,14,1359,18,5.4,0],
+  // WRs
+  ["Randy Moss","MIN","2000s","WR",2003,16,111,1632,17,0],
+  ["Marvin Harrison","IND","2000s","WR",2001,16,109,1524,15,0],
+  ["Torry Holt","STL","2000s","WR",2003,16,117,1696,12,0],
+  ["Terrell Owens","PHI","2000s","WR",2004,14,77,1200,14,0],
+  ["Chad Johnson","CIN","2000s","WR",2006,16,87,1369,7,0],
+  ["Steve Smith","CAR","2000s","WR",2005,16,103,1563,12,0],
+  ["Reggie Wayne","IND","2000s","WR",2007,16,104,1510,10,0],
+  ["Hines Ward","PIT","2000s","WR",2002,16,112,1329,12,0],
+  ["Larry Fitzgerald","ARI","2000s","WR",2008,16,96,1431,10,0],
+  ["Andre Johnson","HOU","2000s","WR",2008,16,115,1575,8,0],
+  ["Donald Driver","GB","2000s","WR",2006,16,92,1295,8,0],
+  ["Anquan Boldin","ARI","2000s","WR",2005,14,102,1402,7,0],
+  ["Isaac Bruce","STL","2000s","WR",2000,16,87,1471,9,0],
+  ["Santana Moss","WAS","2000s","WR",2005,16,84,1483,9,0],
+  ["Derrick Mason","TEN","2000s","WR",2003,16,95,1303,8,0],
+  ["Rod Smith","DEN","2000s","WR",2001,16,113,1343,11,0],
+  ["Plaxico Burress","NYG","2000s","WR",2005,16,76,1214,7,0],
+  ["Eric Moulds","BUF","2000s","WR",2002,16,100,1292,10,0],
+  ["Wes Welker","NE","2000s","WR",2009,14,123,1348,4,0],
+  ["Keyshawn Johnson","TB","2000s","WR",2001,16,106,1266,1,0],
+  ["Joe Horn","NO","2000s","WR",2004,16,94,1399,11,0],
+  ["Laveranues Coles","NYJ","2000s","WR",2006,16,91,1098,6,0],
+  ["Darrell Jackson","SEA","2000s","WR",2004,15,87,1199,7,0],
+  ["Eddie Kennison","KC","2000s","WR",2004,16,62,1086,8,0],
+  ["Jimmy Smith","JAX","2000s","WR",2001,16,112,1373,8,0],
+  ["Braylon Edwards","CLE","2000s","WR",2007,16,80,1289,16,0],
+  ["Drew Bennett","TEN","2000s","WR",2004,14,80,1247,11,0],
+  ["Lee Evans","BUF","2000s","WR",2006,16,82,1292,8,0],
+  // TEs
+  ["Tony Gonzalez","KC","2000s","TE",2004,16,102,1258,7,0],
+  ["Antonio Gates","SD","2000s","TE",2004,15,81,964,13,0],
+  ["Jason Witten","DAL","2000s","TE",2007,16,96,1145,7,0],
+  ["Jeremy Shockey","NYG","2000s","TE",2002,15,74,894,2,0],
+  ["Todd Heap","BAL","2000s","TE",2005,16,75,855,7,0],
+  ["Alge Crumpler","ATL","2000s","TE",2005,16,65,877,5,0],
+  ["Chris Cooley","WAS","2000s","TE",2008,15,83,849,1,0],
+  ["Dallas Clark","IND","2000s","TE",2009,15,100,1106,10,0],
+  ["Kellen Winslow Jr","CLE","2000s","TE",2006,16,89,875,3,0],
+  ["Randy McMichael","MIA","2000s","TE",2004,15,73,791,4,0],
+  ["Shannon Sharpe","DEN","2000s","TE",2000,16,67,810,5,0],
+  ["Ben Watson","NE","2000s","TE",2006,13,49,643,3,0],
+
+  // ===== 2010s =====
+  // QBs
+  ["Aaron Rodgers","GB","2010s","QB",2011,15,4643,45,6,122.5],
+  ["Drew Brees","NO","2010s","QB",2011,16,5476,46,14,110.6],
+  ["Matt Ryan","ATL","2010s","QB",2016,16,4944,38,7,117.1],
+  ["Russell Wilson","SEA","2010s","QB",2015,16,4024,34,8,110.1],
+  ["Andrew Luck","IND","2010s","QB",2014,16,4761,40,16,96.5],
+  ["Cam Newton","CAR","2010s","QB",2015,16,3837,35,10,99.4],
+  ["Philip Rivers","LAC","2010s","QB",2018,16,4308,32,12,105.5],
+  ["Ben Roethlisberger","PIT","2010s","QB",2018,16,5129,34,16,96.5],
+  ["Patrick Mahomes","KC","2010s","QB",2018,16,5097,50,12,113.8],
+  ["Dak Prescott","DAL","2010s","QB",2019,16,4902,30,11,99.7],
+  ["Deshaun Watson","HOU","2010s","QB",2019,15,3852,26,12,98.0],
+  ["Kirk Cousins","MIN","2010s","QB",2018,16,4298,30,10,99.7],
+  ["Matthew Stafford","DET","2010s","QB",2011,16,5038,41,16,97.2],
+  ["Ryan Tannehill","TEN","2010s","QB",2019,12,2742,22,6,117.5],
+  ["Jared Goff","LAR","2010s","QB",2018,16,4688,32,12,101.1],
+  ["Ryan Fitzpatrick","TB","2010s","QB",2018,13,2366,17,12,82.6],
+  ["Andy Dalton","CIN","2010s","QB",2015,13,3250,25,7,106.3],
+  ["Eli Manning","NYG","2010s","QB",2015,16,4432,35,14,93.6],
+  ["Alex Smith","WAS","2010s","QB",2017,15,4042,26,5,104.7],
+  ["Joe Flacco","BAL","2010s","QB",2014,16,3986,27,12,91.0],
+  ["Ryan Fitzpatrick","NYJ","2010s","QB",2015,11,2483,17,14,88.0],
+  ["Jameis Winston","TB","2010s","QB",2019,16,5109,33,30,84.3],
+  ["Sam Bradford","STL","2010s","QB",2012,16,3702,21,13,82.6],
+  ["Teddy Bridgewater","MIN","2010s","QB",2015,16,3231,14,9,88.7],
+  // RBs
+  ["Adrian Peterson","MIN","2010s","RB",2012,16,2097,12,6.0,0],
+  ["Marshawn Lynch","SEA","2010s","RB",2014,16,1306,17,4.2,0],
+  ["LeSean McCoy","PHI","2010s","RB",2013,16,1607,9,5.1,0],
+  ["DeMarco Murray","DAL","2010s","RB",2014,16,1845,13,4.7,0],
+  ["Le'Veon Bell","PIT","2010s","RB",2014,16,1361,8,4.7,0],
+  ["Matt Forte","CHI","2010s","RB",2013,16,1339,9,4.6,0],
+  ["Ezekiel Elliott","DAL","2010s","RB",2016,15,1631,15,5.1,0],
+  ["Todd Gurley","LAR","2010s","RB",2017,15,1305,13,4.8,0],
+  ["Arian Foster","HOU","2010s","RB",2010,16,1616,16,4.9,0],
+  ["Chris Johnson","TEN","2010s","RB",2010,16,1364,11,4.3,0],
+  ["Jamaal Charles","KC","2010s","RB",2012,16,1509,5,5.3,0],
+  ["Mark Ingram","NO","2010s","RB",2017,16,1124,12,4.9,0],
+  ["Devonta Freeman","ATL","2010s","RB",2015,15,1056,11,4.0,0],
+  ["Doug Martin","TB","2010s","RB",2012,16,1454,11,4.6,0],
+  ["Carlos Hyde","SF","2010s","RB",2016,13,988,9,3.9,0],
+  ["Lamar Miller","MIA","2010s","RB",2014,16,1099,8,5.1,0],
+  ["Giovani Bernard","CIN","2010s","RB",2014,16,730,5,4.1,0],
+  ["Alfred Morris","WAS","2010s","RB",2012,16,1613,13,4.8,0],
+  ["Frank Gore","SF","2010s","RB",2011,16,1211,8,4.3,0],
+  ["C.J. Anderson","DEN","2010s","RB",2014,15,849,8,4.7,0],
+  ["Ray Rice","BAL","2010s","RB",2011,16,1364,12,4.7,0],
+  ["Fred Jackson","BUF","2010s","RB",2011,10,934,6,5.5,0],
+  ["Chris Ivory","NYJ","2010s","RB",2015,16,1070,7,4.2,0],
+  ["Isaiah Crowell","CLE","2010s","RB",2016,16,952,7,4.8,0],
+  ["Derrick Henry","TEN","2010s","RB",2018,16,1059,12,4.9,0],
+  ["Leonard Fournette","JAX","2010s","RB",2017,13,1040,9,3.9,0],
+  // WRs
+  ["Calvin Johnson","DET","2010s","WR",2012,16,122,1964,5,0],
+  ["Julio Jones","ATL","2010s","WR",2015,16,136,1871,8,0],
+  ["Antonio Brown","PIT","2010s","WR",2015,16,136,1834,10,0],
+  ["Odell Beckham Jr","NYG","2010s","WR",2015,15,96,1450,13,0],
+  ["DeAndre Hopkins","HOU","2010s","WR",2018,16,115,1572,11,0],
+  ["A.J. Green","CIN","2010s","WR",2013,16,98,1426,11,0],
+  ["Mike Evans","TB","2010s","WR",2018,16,86,1524,8,0],
+  ["Demaryius Thomas","DEN","2010s","WR",2014,16,111,1619,11,0],
+  ["Jordy Nelson","GB","2010s","WR",2014,16,98,1519,13,0],
+  ["Michael Thomas","NO","2010s","WR",2019,16,149,1725,9,0],
+  ["Davante Adams","GB","2010s","WR",2018,15,111,1386,13,0],
+  ["Tyreek Hill","KC","2010s","WR",2018,16,87,1479,12,0],
+  ["Larry Fitzgerald","ARI","2010s","WR",2015,16,109,1215,9,0],
+  ["T.Y. Hilton","IND","2010s","WR",2016,16,91,1448,6,0],
+  ["Brandin Cooks","NO","2010s","WR",2016,16,78,1173,8,0],
+  ["Stefon Diggs","MIN","2010s","WR",2019,15,63,1130,6,0],
+  ["Doug Baldwin","SEA","2010s","WR",2015,16,78,1069,14,0],
+  ["Keenan Allen","LAC","2010s","WR",2017,16,102,1393,6,0],
+  ["Allen Robinson","CHI","2010s","WR",2015,16,80,1400,14,0],
+  ["Dez Bryant","DAL","2010s","WR",2014,16,88,1320,16,0],
+  ["Brandon Marshall","CHI","2010s","WR",2012,16,118,1508,11,0],
+  ["DeSean Jackson","PHI","2010s","WR",2013,16,82,1332,9,0],
+  ["Josh Gordon","CLE","2010s","WR",2013,14,87,1646,9,0],
+  ["Robert Woods","LAR","2010s","WR",2018,16,86,1219,6,0],
+  ["Golden Tate","DET","2010s","WR",2014,16,99,1331,4,0],
+  ["Amari Cooper","DAL","2010s","WR",2019,16,79,1189,8,0],
+  ["Adam Thielen","MIN","2010s","WR",2018,16,113,1373,9,0],
+  ["Sammy Watkins","BUF","2010s","WR",2015,13,60,1047,9,0],
+  ["Pierre Garcon","WAS","2010s","WR",2013,16,113,1346,5,0],
+  ["Jarvis Landry","MIA","2010s","WR",2017,16,112,987,9,0],
+  ["Emmanuel Sanders","DEN","2010s","WR",2014,16,101,1404,9,0],
+  ["Julian Edelman","NE","2010s","WR",2019,16,100,1117,6,0],
+  ["Marques Colston","NO","2010s","WR",2012,16,83,1154,10,0],
+  ["Alshon Jeffery","CHI","2010s","WR",2013,16,89,1421,7,0],
+  ["Cecil Shorts","JAX","2010s","WR",2012,16,55,979,7,0],
+  ["Kenny Britt","TEN","2010s","WR",2011,11,45,589,4,0],
+  // TEs
+  ["Rob Gronkowski","NE","2010s","TE",2011,16,90,1327,17,0],
+  ["Travis Kelce","KC","2010s","TE",2018,16,103,1336,10,0],
+  ["Jimmy Graham","NO","2010s","TE",2013,16,86,1215,16,0],
+  ["Zach Ertz","PHI","2010s","TE",2018,16,116,1163,8,0],
+  ["Greg Olsen","CAR","2010s","TE",2016,16,80,1073,3,0],
+  ["Delanie Walker","TEN","2010s","TE",2015,16,94,1088,6,0],
+  ["Tyler Eifert","CIN","2010s","TE",2015,13,52,615,13,0],
+  ["George Kittle","SF","2010s","TE",2018,16,88,1377,5,0],
+  ["Jordan Reed","WAS","2010s","TE",2015,14,87,952,11,0],
+  ["Jason Witten","DAL","2010s","TE",2012,16,110,1039,3,0],
+  ["Martellus Bennett","CHI","2010s","TE",2014,16,90,916,6,0],
+  ["Eric Ebron","IND","2010s","TE",2018,16,66,750,13,0],
+  ["Julius Thomas","DEN","2010s","TE",2014,15,43,489,12,0],
+  ["Owen Daniels","HOU","2010s","TE",2012,16,62,716,6,0],
+  ["Jared Cook","OAK","2010s","TE",2018,16,68,896,6,0],
+  ["Kyle Rudolph","MIN","2010s","TE",2016,16,83,840,7,0],
+  ["Marcedes Lewis","JAX","2010s","TE",2010,16,58,700,10,0],
+  ["Charles Clay","BUF","2010s","TE",2015,16,51,528,3,0],
+  ["Dennis Pitta","BAL","2010s","TE",2012,15,61,669,7,0],
+  ["Vernon Davis","SF","2010s","TE",2013,16,52,850,13,0],
+  ["Antonio Gates","SD","2010s","TE",2014,16,69,821,12,0],
+
+  // ===== 2020s =====
+  // QBs
+  ["Patrick Mahomes","KC","2020s","QB",2022,17,5250,41,12,105.2],
+  ["Josh Allen","BUF","2020s","QB",2024,17,3731,28,6,101.4],
+  ["Lamar Jackson","BAL","2020s","QB",2024,16,3955,39,4,119.6],
+  ["Joe Burrow","CIN","2020s","QB",2024,17,4918,43,9,108.1],
+  ["Jalen Hurts","PHI","2020s","QB",2022,15,3701,22,6,101.5],
+  ["Tua Tagovailoa","MIA","2020s","QB",2023,13,2416,18,9,87.5],
+  ["Justin Herbert","LAC","2020s","QB",2021,17,5014,38,15,97.7],
+  ["Dak Prescott","DAL","2020s","QB",2023,17,4516,36,9,105.9],
+  ["Kyler Murray","ARI","2020s","QB",2021,14,3787,24,10,100.6],
+  ["Brock Purdy","SF","2020s","QB",2023,17,4280,31,11,113.0],
+  ["Aaron Rodgers","GB","2020s","QB",2021,16,4115,37,4,111.9],
+  ["Tom Brady","TB","2020s","QB",2021,17,5316,43,12,102.1],
+  ["Matthew Stafford","LAR","2020s","QB",2021,17,4886,41,17,102.9],
+  ["Jayden Daniels","WAS","2020s","QB",2024,17,3568,25,9,100.1],
+  ["Baker Mayfield","TB","2020s","QB",2024,17,4500,41,16,100.4],
+  ["Jordan Love","GB","2020s","QB",2024,16,3389,25,11,91.4],
+  ["Derek Carr","NO","2020s","QB",2022,15,3522,25,8,95.8],
+  ["Jared Goff","DET","2020s","QB",2024,16,4629,37,12,108.5],
+  ["Sam Darnold","MIN","2020s","QB",2024,17,4319,35,12,102.5],
+  ["C.J. Stroud","HOU","2020s","QB",2023,15,4108,23,5,100.8],
+  ["Bryce Young","CAR","2020s","QB",2024,13,2256,15,9,81.1],
+  ["Will Levis","TEN","2020s","QB",2024,11,2091,12,12,68.1],
+  ["Trevor Lawrence","JAX","2020s","QB",2024,17,3795,22,11,88.4],
+  ["Anthony Richardson","IND","2020s","QB",2024,17,2540,14,12,68.6],
+  ["Aidan O'Connell","LV","2020s","QB",2024,12,2217,12,7,80.3],
+  ["Drew Lock","NYG","2020s","QB",2024,14,2399,9,7,72.1],
+  ["Drake Maye","NE","2020s","QB",2024,13,2276,15,10,83.4],
+  ["Aaron Rodgers","NYJ","2020s","QB",2024,17,3623,24,14,88.0],
+  ["Bo Nix","DEN","2020s","QB",2024,17,3775,29,12,93.3],
+  ["Geno Smith","SEA","2020s","QB",2022,17,4282,30,11,100.9],
+  ["Caleb Williams","CHI","2020s","QB",2024,17,3541,20,6,93.2],
+  // RBs
+  ["Derrick Henry","TEN","2020s","RB",2020,16,2027,17,5.4,0],
+  ["Jonathan Taylor","IND","2020s","RB",2021,17,1811,18,5.5,0],
+  ["Saquon Barkley","PHI","2020s","RB",2024,16,2005,13,5.8,0],
+  ["Nick Chubb","CLE","2020s","RB",2022,17,1525,12,5.2,0],
+  ["Josh Jacobs","GB","2020s","RB",2022,17,1653,12,4.9,0],
+  ["Christian McCaffrey","SF","2020s","RB",2023,16,1459,14,5.4,0],
+  ["Dalvin Cook","MIN","2020s","RB",2020,14,1557,16,5.0,0],
+  ["Joe Mixon","HOU","2020s","RB",2024,17,1016,11,4.2,0],
+  ["Najee Harris","PIT","2020s","RB",2021,17,1200,7,3.9,0],
+  ["Austin Ekeler","LAC","2020s","RB",2023,14,915,5,4.3,0],
+  ["James Cook","BUF","2020s","RB",2024,16,1009,16,4.5,0],
+  ["Bijan Robinson","ATL","2020s","RB",2024,17,1456,11,4.8,0],
+  ["Jahmyr Gibbs","DET","2020s","RB",2024,17,1412,16,5.6,0],
+  ["De'Von Achane","MIA","2020s","RB",2024,15,1019,9,5.5,0],
+  ["Kyren Williams","LAR","2020s","RB",2024,17,1299,14,4.1,0],
+  ["Alvin Kamara","NO","2020s","RB",2020,16,932,16,4.8,0],
+  ["Breece Hall","NYJ","2020s","RB",2024,17,1043,5,3.8,0],
+  ["Chuba Hubbard","CAR","2020s","RB",2024,17,1195,10,5.0,0],
+  ["Brian Robinson","WAS","2020s","RB",2024,16,1002,8,4.0,0],
+  ["Chase Brown","CIN","2020s","RB",2024,16,990,9,4.4,0],
+  ["Rhamondre Stevenson","NE","2020s","RB",2024,17,801,8,3.7,0],
+  ["Isiah Pacheco","KC","2020s","RB",2023,13,830,7,4.3,0],
+  ["Kenneth Walker III","SEA","2020s","RB",2022,11,1050,9,4.6,0],
+  ["Travis Etienne","JAX","2020s","RB",2023,16,1008,11,4.2,0],
+  ["Aaron Jones","MIN","2020s","RB",2023,16,1028,5,4.1,0],
+  ["Jerome Ford","CLE","2020s","RB",2024,15,600,4,3.9,0],
+  ["Rachaad White","TB","2020s","RB",2024,17,676,6,3.5,0],
+  ["D'Andre Swift","CHI","2020s","RB",2024,14,594,4,3.5,0],
+  ["Tony Pollard","TEN","2020s","RB",2024,17,1017,6,3.8,0],
+  ["James Conner","ARI","2020s","RB",2024,13,781,7,4.3,0],
+  ["Tyler Allgeier","ATL","2020s","RB",2024,17,682,6,3.7,0],
+  ["Rico Dowdle","DAL","2020s","RB",2024,16,1079,5,4.4,0],
+  ["Javonte Williams","DEN","2020s","RB",2021,17,903,4,4.4,0],
+  ["David Montgomery","DET","2020s","RB",2023,14,1015,13,3.9,0],
+  // WRs
+  ["Ja'Marr Chase","CIN","2020s","WR",2024,17,127,1708,17,0],
+  ["Tyreek Hill","MIA","2020s","WR",2023,17,119,1799,13,0],
+  ["Cooper Kupp","LAR","2020s","WR",2021,17,145,1947,16,0],
+  ["CeeDee Lamb","DAL","2020s","WR",2023,17,135,1749,12,0],
+  ["Justin Jefferson","MIN","2020s","WR",2022,17,128,1809,8,0],
+  ["Davante Adams","LV","2020s","WR",2022,17,100,1516,14,0],
+  ["Stefon Diggs","BUF","2020s","WR",2022,17,108,1429,11,0],
+  ["A.J. Brown","PHI","2020s","WR",2023,17,106,1456,7,0],
+  ["Amon-Ra St. Brown","DET","2020s","WR",2024,17,115,1263,8,0],
+  ["Nico Collins","HOU","2020s","WR",2024,9,59,894,6,0],
+  ["Puka Nacua","LAR","2020s","WR",2023,17,105,1486,6,0],
+  ["Deebo Samuel","SF","2020s","WR",2021,16,77,1405,6,0],
+  ["Terry McLaurin","WAS","2020s","WR",2024,17,82,1096,13,0],
+  ["DK Metcalf","SEA","2020s","WR",2024,17,82,1107,8,0],
+  ["Chris Olave","NO","2020s","WR",2022,15,72,1042,4,0],
+  ["Garrett Wilson","NYJ","2020s","WR",2024,17,79,1013,5,0],
+  ["Drake London","ATL","2020s","WR",2024,17,100,1271,8,0],
+  ["Mike Evans","TB","2020s","WR",2024,15,74,1004,11,0],
+  ["Jaylen Waddle","MIA","2020s","WR",2022,17,75,1356,8,0],
+  ["Chris Godwin","TB","2020s","WR",2021,14,98,1103,5,0],
+  ["Diontae Johnson","PIT","2020s","WR",2021,16,107,1161,8,0],
+  ["Brandon Aiyuk","SF","2020s","WR",2024,17,74,942,7,0],
+  ["DeVonta Smith","PHI","2020s","WR",2024,17,71,893,5,0],
+  ["George Pickens","PIT","2020s","WR",2024,17,64,900,3,0],
+  ["Keenan Allen","CHI","2020s","WR",2024,13,58,744,3,0],
+  ["Rashid Shaheed","NO","2020s","WR",2024,8,28,349,1,0],
+  ["Khalil Shakir","BUF","2020s","WR",2024,17,76,821,4,0],
+  ["Zay Flowers","BAL","2020s","WR",2024,16,74,1059,4,0],
+  ["Ladd McConkey","LAC","2020s","WR",2024,17,82,1149,7,0],
+  ["Malik Nabers","NYG","2020s","WR",2024,16,109,1204,7,0],
+  ["Brian Thomas Jr","JAX","2020s","WR",2024,17,87,1179,10,0],
+  ["Jaxon Smith-Njigba","SEA","2020s","WR",2024,17,100,1130,6,0],
+  ["Courtland Sutton","DEN","2020s","WR",2024,17,81,1081,8,0],
+  ["Tee Higgins","CIN","2020s","WR",2023,12,42,656,2,0],
+  ["Marvin Harrison Jr","ARI","2020s","WR",2024,17,68,885,8,0],
+  ["DeAndre Hopkins","TEN","2020s","WR",2024,9,29,395,4,0],
+  ["Amari Cooper","CLE","2020s","WR",2023,15,72,1250,2,0],
+  ["Jakobi Meyers","LV","2020s","WR",2024,17,81,1025,3,0],
+  ["Xavier Legette","CAR","2020s","WR",2024,16,42,506,2,0],
+  ["Rome Odunze","CHI","2020s","WR",2024,17,60,764,3,0],
+  ["Wan'Dale Robinson","NYG","2020s","WR",2024,14,72,608,2,0],
+  ["Jerry Jeudy","CLE","2020s","WR",2024,16,69,1229,4,0],
+  ["Quentin Johnston","LAC","2020s","WR",2024,15,56,852,5,0],
+  ["Calvin Ridley","TEN","2020s","WR",2023,17,76,1016,5,0],
+  ["Curtis Samuel","BUF","2020s","WR",2024,14,51,561,2,0],
+  ["Jayden Reed","GB","2020s","WR",2024,17,52,793,6,0],
+  ["Christian Watson","GB","2020s","WR",2024,13,29,620,2,0],
+  ["Christian Kirk","JAX","2020s","WR",2022,17,84,1108,8,0],
+  ["Tank Dell","HOU","2020s","WR",2023,11,47,709,7,0],
+  ["Xavier Worthy","KC","2020s","WR",2024,17,59,638,5,0],
+  ["Rashod Bateman","BAL","2020s","WR",2024,17,47,756,4,0],
+  ["DeAndre Hopkins","KC","2020s","WR",2024,8,21,254,3,0],
+  ["Darnell Mooney","ATL","2020s","WR",2024,17,69,1024,6,0],
+  ["DJ Moore","CHI","2020s","WR",2023,17,96,1364,8,0],
+  // TEs
+  ["Travis Kelce","KC","2020s","TE",2022,17,110,1338,12,0],
+  ["Mark Andrews","BAL","2020s","TE",2021,17,107,1361,9,0],
+  ["George Kittle","SF","2020s","TE",2022,16,84,1042,5,0],
+  ["T.J. Hockenson","MIN","2020s","TE",2023,13,95,960,5,0],
+  ["Dallas Goedert","PHI","2020s","TE",2022,17,55,702,3,0],
+  ["Kyle Pitts","ATL","2020s","TE",2021,17,68,1026,1,0],
+  ["Trey McBride","ARI","2020s","TE",2024,17,111,1146,5,0],
+  ["Sam LaPorta","DET","2020s","TE",2023,17,86,889,10,0],
+  ["David Njoku","CLE","2020s","TE",2024,16,90,1085,6,0],
+  ["Evan Engram","JAX","2020s","TE",2023,17,114,963,4,0],
+  ["Dalton Kincaid","BUF","2020s","TE",2023,17,73,673,2,0],
+  ["Pat Freiermuth","PIT","2020s","TE",2024,17,61,656,5,0],
+  ["Brock Bowers","LV","2020s","TE",2024,17,112,1194,5,0],
+  ["Cole Kmet","CHI","2020s","TE",2024,17,63,669,5,0],
+  ["Cade Otton","TB","2020s","TE",2024,16,69,816,2,0],
+  ["Jonnu Smith","MIA","2020s","TE",2024,17,88,879,5,0],
+  ["Jake Ferguson","DAL","2020s","TE",2024,17,66,682,3,0],
+  ["Taysom Hill","NO","2020s","TE",2024,13,32,257,3,0],
+  ["Hunter Henry","NE","2020s","TE",2024,17,65,674,4,0],
+  ["Noah Fant","SEA","2020s","TE",2024,17,50,482,3,0],
+  ["Chigoziem Okonkwo","TEN","2020s","TE",2024,17,53,528,1,0],
+  ["Will Dissly","LAC","2020s","TE",2024,16,31,309,0,0],
+  ["Zach Ertz","WAS","2020s","TE",2023,16,60,579,4,0],
+  ["Tyler Conklin","NYJ","2020s","TE",2024,17,50,433,3,0],
+  ["Mike Gesicki","CIN","2020s","TE",2024,17,65,665,2,0],
+  ["Dawson Knox","BUF","2020s","TE",2024,11,22,217,5,0],
+  ["Tucker Kraft","GB","2020s","TE",2024,17,64,713,6,0],
+  ["Dalton Schultz","HOU","2020s","TE",2022,16,63,728,5,0],
+  ["Brevin Jordan","HOU","2020s","TE",2024,10,15,144,1,0],
+  ["Luke Musgrave","GB","2020s","TE",2023,15,34,352,1,0],
+  ["Adam Trautman","DEN","2020s","TE",2024,17,28,264,1,0],
+  ["Austin Hooper","IND","2020s","TE",2024,6,12,91,0,0],
+  ["Brenton Strange","JAX","2020s","TE",2024,17,36,478,5,0],
+];
+
+// Parse raw data into objects
+const PLAYERS = RAW.map((r, i) => {
+  const base = { id: i, n: r[0], t: r[1], d: r[2], p: r[3], y: r[4], g: r[5] };
+  if (r[3] === "QB") return { ...base, py: r[6], ptd: r[7], int: r[8], r: r[9] };
+  if (r[3] === "RB") return { ...base, ry: r[6], rtd: r[7], ypc: r[8] };
+  return { ...base, rec: r[6], recy: r[7], retd: r[8] }; // WR & TE
+});
+
+const TEAM_META = {
+  ARI:{name:"Cardinals",c:"#97233F"},ATL:{name:"Falcons",c:"#A71930"},
+  BAL:{name:"Ravens",c:"#241773"},BUF:{name:"Bills",c:"#00338D"},
+  CAR:{name:"Panthers",c:"#0085CA"},CHI:{name:"Bears",c:"#0B162A"},
+  CIN:{name:"Bengals",c:"#FB4F14"},CLE:{name:"Browns",c:"#FF3C00"},
+  DAL:{name:"Cowboys",c:"#003594"},DEN:{name:"Broncos",c:"#FB4F14"},
+  DET:{name:"Lions",c:"#0076B6"},GB:{name:"Packers",c:"#203731"},
+  HOU:{name:"Texans",c:"#03202F"},IND:{name:"Colts",c:"#002C5F"},
+  JAX:{name:"Jaguars",c:"#006778"},KC:{name:"Chiefs",c:"#E31837"},
+  LV:{name:"Raiders",c:"#A5ACAF"},OAK:{name:"Raiders",c:"#A5ACAF"},
+  LAC:{name:"Chargers",c:"#0080C6"},SD:{name:"Chargers",c:"#0080C6"},
+  LAR:{name:"Rams",c:"#003594"},STL:{name:"Rams",c:"#003594"},
+  MIA:{name:"Dolphins",c:"#008E97"},MIN:{name:"Vikings",c:"#4F2683"},
+  NE:{name:"Patriots",c:"#002244"},NO:{name:"Saints",c:"#D3BC8D"},
+  NYG:{name:"Giants",c:"#0B2265"},NYJ:{name:"Jets",c:"#125740"},
+  PHI:{name:"Eagles",c:"#004C54"},PIT:{name:"Steelers",c:"#FFB612"},
+  SF:{name:"49ers",c:"#AA0000"},SEA:{name:"Seahawks",c:"#002244"},
+  TB:{name:"Buccaneers",c:"#D50A0A"},TEN:{name:"Titans",c:"#0C2340"},
+  WAS:{name:"Commanders",c:"#5A1414"},
+};
+
+const SLOT_LABELS = ["QB", "RB", "WR1", "TE", "WR2"];
+const POS_FOR_SLOT = ["QB", "RB", "WR", "TE", "WR"];
+
+// ===== GAME ENGINE =====
+function playerValue(p) {
+  if (p.p === "QB") return (p.py / 100) + (p.ptd * 3) - (p.int * 2) + (p.r / 10);
+  if (p.p === "RB") return (p.ry / 50) + (p.rtd * 4) + (p.ypc * 3);
+  if (p.p === "TE") return (p.rec / 4) + (p.recy / 40) + (p.retd * 5);
+  return (p.rec / 5) + (p.recy / 50) + (p.retd * 4); // WR
+}
+
+function simulate(roster) {
+  const total = roster.reduce((sum, p) => sum + playerValue(p), 0);
+  const raw = 17 / (1 + Math.exp(-(total - 380) / 55));
+  const noise = (Math.random() - 0.5) * 2;
+  return Math.max(0, Math.min(17, Math.round(raw + noise)));
+}
+
+function getPoints(roster) {
+  return Math.round(roster.reduce((sum, p) => sum + playerValue(p), 0));
+}
+
+// ===== MAIN COMPONENT =====
+function RunItPerfect() {
+  const [screen, setScreen] = useState("menu");
+  const [roster, setRoster] = useState([null, null, null, null, null]);
+  const [round, setRound] = useState(0);
+  const [spin, setSpin] = useState(null);
+  const [spinDisplay, setSpinDisplay] = useState(null);
+  const [usedCombos, setUsedCombos] = useState([]);
+  const [reSpinUsed, setReSpinUsed] = useState(false);
+  const [record, setRecord] = useState(null);
+  const [simGames, setSimGames] = useState([]);
+  const [points, setPoints] = useState(0);
+  const [mode, setMode] = useState("classic"); // classic or blind
+  const spinRef = useRef(null);
+
+  const unfilledPositions = useCallback(() => {
+    const u = [];
+    if (!roster[0]) u.push("QB");
+    if (!roster[1]) u.push("RB");
+    if (!roster[2]) u.push("WR");
+    if (!roster[3]) u.push("TE");
+    if (!roster[4]) u.push("WR");
+    return [...new Set(u)];
+  }, [roster]);
+
+  const getValidCombos = useCallback(() => {
+    const uf = unfilledPositions();
+    const seen = new Set();
+    const combos = [];
+    PLAYERS.forEach(p => {
+      const key = `${p.t}-${p.d}`;
+      if (!usedCombos.includes(key) && uf.includes(p.p) && !seen.has(key)) {
+        const hasValidPlayer = PLAYERS.some(
+          pp => pp.t === p.t && pp.d === p.d && uf.includes(pp.p) && pp.g >= 8
+        );
+        if (hasValidPlayer) {
+          seen.add(key);
+          combos.push({ key, team: p.t, decade: p.d });
+        }
+      }
+    });
+    return combos;
+  }, [usedCombos, unfilledPositions]);
+
+  const doSpin = useCallback(() => {
+    const valid = getValidCombos();
+    if (valid.length === 0) return;
+    const target = valid[Math.floor(Math.random() * valid.length)];
+
+    setScreen("spinning");
+    let ticks = 0;
+    const allCombos = [...valid];
+
+    if (spinRef.current) clearInterval(spinRef.current);
+    spinRef.current = setInterval(() => {
+      const rand = allCombos[Math.floor(Math.random() * allCombos.length)];
+      setSpinDisplay(rand);
+      ticks++;
+      const speed = ticks > 12 ? 200 : ticks > 8 ? 150 : 80;
+      if (ticks > 15) {
+        clearInterval(spinRef.current);
+        setSpinDisplay(target);
+        setSpin(target);
+        setUsedCombos(prev => [...prev, target.key]);
+        setTimeout(() => setScreen("picking"), 600);
+      }
+    }, 80);
+  }, [getValidCombos]);
+
+  const getAvailablePlayers = useCallback(() => {
+    if (!spin) return [];
+    const uf = unfilledPositions();
+    return PLAYERS.filter(p =>
+      p.t === spin.team && p.d === spin.decade && uf.includes(p.p) && p.g >= 8
+    ).sort((a, b) => playerValue(b) - playerValue(a));
+  }, [spin, unfilledPositions]);
+
+  const pickPlayer = useCallback((player) => {
+    const nr = [...roster];
+    if (player.p === "QB" && !nr[0]) nr[0] = player;
+    else if (player.p === "RB" && !nr[1]) nr[1] = player;
+    else if (player.p === "WR" && !nr[2]) nr[2] = player;
+    else if (player.p === "TE" && !nr[3]) nr[3] = player;
+    else if (player.p === "WR" && nr[2] && !nr[4]) nr[4] = player;
+    setRoster(nr);
+    const nextRound = round + 1;
+    setRound(nextRound);
+
+    if (nextRound >= 5) {
+      setScreen("simulating");
+      const wins = simulate(nr);
+      const losses = 17 - wins;
+      const pts = getPoints(nr);
+      setPoints(pts);
+
+      let games = [];
+      let w = 0, l = 0;
+      for (let i = 0; i < 17; i++) {
+        const winsLeft = wins - w;
+        const gamesLeft = 17 - i;
+        if (l >= losses || Math.random() < winsLeft / gamesLeft) {
+          games.push("W"); w++;
+        } else {
+          games.push("L"); l++;
+        }
+      }
+
+      let idx = 0;
+      const simInterval = setInterval(() => {
+        setSimGames(prev => [...prev, games[idx]]);
+        idx++;
+        if (idx >= 17) {
+          clearInterval(simInterval);
+          setRecord({ wins, losses, games });
+          setTimeout(() => setScreen("results"), 800);
+        }
+      }, 180);
+    } else {
+      setScreen("prebattle");
+    }
+  }, [roster, round]);
+
+  const doRespin = useCallback(() => {
+    if (reSpinUsed) return;
+    setReSpinUsed(true);
+    const key = spin?.key;
+    if (key) {
+      setUsedCombos(prev => prev.filter(k => k !== key));
+    }
+    setSpin(null);
+    setSpinDisplay(null);
+    setTimeout(() => doSpin(), 100);
+  }, [reSpinUsed, spin, doSpin]);
+
+  const resetGame = () => {
+    setScreen("menu");
+    setRoster([null, null, null, null, null]);
+    setRound(0);
+    setSpin(null);
+    setSpinDisplay(null);
+    setUsedCombos([]);
+    setReSpinUsed(false);
+    setRecord(null);
+    setSimGames([]);
+    setPoints(0);
+  };
+
+  const statLine = (p) => {
+    if (p.p === "QB") return `${p.py.toLocaleString()} YDS / ${p.ptd} TD / ${p.int} INT / ${p.r} RTG`;
+    if (p.p === "RB") return `${p.ry.toLocaleString()} YDS / ${p.rtd} TD / ${p.ypc} YPC`;
+    return `${p.rec} REC / ${p.recy.toLocaleString()} YDS / ${p.retd} TD`;
+  };
+
+  const shortStat = (p) => {
+    if (p.p === "QB") return `${p.py.toLocaleString()} yds, ${p.ptd} td`;
+    if (p.p === "RB") return `${p.ry.toLocaleString()} yds, ${p.rtd} td`;
+    return `${p.rec} rec, ${p.recy.toLocaleString()} yds, ${p.retd} td`;
+  };
+
+  const teamName = (abbr) => TEAM_META[abbr]?.name || abbr;
+
+  // ===== SCREENS =====
+
+  // MENU
+  if (screen === "menu") return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute inset-0 opacity-5">
+        {Array.from({length: 20}).map((_, i) => (
+          <div key={i} className="absolute w-full border-t border-green-500"
+            style={{top: `${i * 5 + 2}%`, opacity: i % 5 === 0 ? 0.6 : 0.2}} />
+        ))}
+      </div>
+      <div className="relative z-10 text-center">
+        <div className="text-green-400 text-xs tracking-[0.3em] uppercase mb-2 font-mono">Can your offense go undefeated?</div>
+        <h1 className="text-5xl sm:text-7xl font-black text-white mb-1 tracking-tight">RUN IT</h1>
+        <h1 className="text-5xl sm:text-7xl font-black text-green-400 mb-6 tracking-tight">PERFECT</h1>
+        <p className="text-gray-500 text-sm max-w-sm mx-auto mb-10 leading-relaxed">
+          Draft 5 NFL offensive legends across decades. A simulation engine runs your squad through a full 17-game season. The goal: go 17-0.
+        </p>
+        <button onClick={() => { setMode("classic"); doSpin(); }}
+          className="bg-green-500 hover:bg-green-400 text-gray-950 font-bold text-lg px-10 py-4 rounded-lg transition-all active:scale-95 mb-3 w-64">
+          PLAY CLASSIC
+        </button>
+        <br />
+        <button onClick={() => { setMode("blind"); doSpin(); }}
+          className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-white font-semibold text-sm px-10 py-3 rounded-lg transition-all active:scale-95 w-64">
+          PLAY BLIND (stats hidden)
+        </button>
+        <p className="text-gray-700 text-xs mt-8 font-mono">PROTOTYPE v0.1 — RunItPerfect.com</p>
+      </div>
+    </div>
+  );
+
+  // SPINNING
+  if (screen === "spinning") {
+    const d = spinDisplay;
+    return (
+      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
+        <div className="text-gray-600 text-xs tracking-widest uppercase mb-8 font-mono">Round {round + 1} of 5</div>
+        <div className="w-72 h-40 rounded-xl border-2 border-gray-700 flex flex-col items-center justify-center bg-gray-900 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 to-transparent" />
+          {d ? (
+            <div className="text-center relative z-10">
+              <div className="text-3xl font-black text-white" style={{color: TEAM_META[d.team]?.c || '#fff'}}>
+                {d.team}
+              </div>
+              <div className="text-gray-400 text-sm mt-1">{teamName(d.team)}</div>
+              <div className="text-green-400 text-xl font-bold mt-2 font-mono">{d.decade}</div>
+            </div>
+          ) : (
+            <div className="text-gray-600 text-lg">Spinning...</div>
+          )}
+        </div>
+        <div className="flex gap-2 mt-8">
+          {SLOT_LABELS.map((s, i) => (
+            <div key={i} className={`w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold
+              ${roster[i] ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-800 text-gray-600 border border-gray-700'}`}>
+              {roster[i] ? '✓' : s}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // PICKING
+  if (screen === "picking") {
+    const available = getAvailablePlayers();
+    return (
+      <div className="min-h-screen bg-gray-950 p-4 sm:p-6">
+        <div className="max-w-lg mx-auto">
+          <div className="text-center mb-6">
+            <div className="text-gray-600 text-xs tracking-widest uppercase font-mono mb-2">Round {round + 1} of 5</div>
+            <div className="inline-flex items-center gap-3 bg-gray-900 border border-gray-700 rounded-xl px-6 py-3">
+              <span className="text-2xl font-black" style={{color: TEAM_META[spin.team]?.c || '#fff'}}>{spin.team}</span>
+              <span className="text-gray-600">|</span>
+              <span className="text-green-400 font-bold font-mono">{spin.decade}</span>
+            </div>
+            <div className="text-gray-500 text-sm mt-2">{teamName(spin.team)} — {spin.decade}</div>
+          </div>
+
+          {!reSpinUsed && (
+            <button onClick={doRespin}
+              className="w-full mb-4 py-2 rounded-lg border border-yellow-600/30 text-yellow-500 text-sm font-semibold hover:bg-yellow-500/10 transition-all">
+              RE-SPIN (1 free)
+            </button>
+          )}
+
+          <div className="text-gray-600 text-xs uppercase tracking-wider mb-3 font-mono">Select a player</div>
+          <div className="space-y-2">
+            {available.map(p => (
+              <button key={p.id} onClick={() => pickPlayer(p)}
+                className="w-full text-left bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-600 rounded-xl p-4 transition-all active:scale-[0.98] group">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-white font-bold text-base group-hover:text-green-400 transition-colors">{p.n}</span>
+                    <span className="text-gray-600 text-sm ml-2">{p.p}</span>
+                  </div>
+                  <span className="text-gray-700 text-xs font-mono">{p.y}</span>
+                </div>
+                {mode === "classic" && (
+                  <div className="text-gray-500 text-xs mt-1 font-mono">{statLine(p)}</div>
+                )}
+                {mode === "classic" && (
+                  <div className="text-gray-700 text-xs mt-1">{p.g} games started</div>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 mt-6 justify-center">
+            {SLOT_LABELS.map((s, i) => (
+              <div key={i} className={`w-11 h-11 rounded-lg flex items-center justify-center text-xs font-bold
+                ${roster[i] ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-800 text-gray-600 border border-gray-700'}`}>
+                {roster[i] ? '✓' : s}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // PRE-BATTLE (between rounds, shows current roster)
+  if (screen === "prebattle") return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
+      <div className="text-gray-600 text-xs tracking-widest uppercase font-mono mb-6">Your Roster — {round}/5 picks</div>
+      <div className="w-full max-w-sm space-y-2 mb-8">
+        {SLOT_LABELS.map((s, i) => (
+          <div key={i} className={`flex items-center justify-between rounded-xl px-4 py-3 border
+            ${roster[i] ? 'bg-gray-900 border-gray-700' : 'bg-gray-900/50 border-gray-800 border-dashed'}`}>
+            <div className="flex items-center gap-3">
+              <span className={`text-xs font-bold font-mono w-8 ${roster[i] ? 'text-green-400' : 'text-gray-700'}`}>{s}</span>
+              {roster[i] ? (
+                <div>
+                  <div className="text-white font-semibold text-sm">{roster[i].n}</div>
+                  <div className="text-gray-500 text-xs font-mono">{roster[i].t} — {roster[i].y}</div>
+                </div>
+              ) : (
+                <div className="text-gray-700 text-sm">Empty</div>
+              )}
+            </div>
+            {roster[i] && (
+              <div className="text-gray-600 text-xs font-mono">{shortStat(roster[i])}</div>
+            )}
+          </div>
+        ))}
+      </div>
+      <button onClick={doSpin}
+        className="bg-green-500 hover:bg-green-400 text-gray-950 font-bold text-base px-8 py-3 rounded-lg transition-all active:scale-95">
+        SPIN ROUND {round + 1}
+      </button>
+    </div>
+  );
+
+  // SIMULATING
+  if (screen === "simulating") return (
+    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center p-6">
+      <div className="text-green-400 text-xs tracking-[0.3em] uppercase mb-4 font-mono">Simulating Season</div>
+      <div className="text-white text-4xl font-black mb-8 font-mono">
+        {simGames.filter(g => g === "W").length}-{simGames.filter(g => g === "L").length}
+      </div>
+      <div className="flex flex-wrap gap-1.5 max-w-xs justify-center">
+        {simGames.map((g, i) => (
+          <div key={i} className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold
+            ${g === "W" ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+            {g}
+          </div>
+        ))}
+        {Array.from({length: 17 - simGames.length}).map((_, i) => (
+          <div key={`e${i}`} className="w-8 h-8 rounded bg-gray-800/50 border border-gray-800" />
+        ))}
+      </div>
+      <div className="text-gray-600 text-xs mt-4 font-mono">Week {simGames.length} / 17</div>
+    </div>
+  );
+
+  // RESULTS
+  if (screen === "results" && record) {
+    const isPerfect = record.wins === 17;
+    return (
+      <div className="min-h-screen bg-gray-950 p-4 sm:p-6">
+        <div className="max-w-md mx-auto">
+          {/* Results Card */}
+          <div className={`rounded-2xl p-6 border ${isPerfect ? 'bg-gradient-to-b from-yellow-500/10 to-gray-900 border-yellow-500/30' : 'bg-gray-900 border-gray-700'}`}>
+            <div className="text-center mb-6">
+              <div className={`text-xs tracking-[0.3em] uppercase mb-2 font-mono ${isPerfect ? 'text-yellow-400' : 'text-gray-600'}`}>
+                {isPerfect ? 'PERFECT SEASON' : 'SEASON RESULT'}
+              </div>
+              <div className={`text-6xl font-black font-mono ${isPerfect ? 'text-yellow-400' : 'text-white'}`}>
+                {record.wins}-{record.losses}
+              </div>
+              <div className="text-gray-500 text-sm mt-2 font-mono">{points} PTS</div>
+              <div className="text-gray-600 text-xs mt-1">{mode === "blind" ? "Blind Mode" : "Classic"}</div>
+            </div>
+
+            <div className="space-y-1.5">
+              {SLOT_LABELS.map((s, i) => roster[i] && (
+                <div key={i} className="flex items-center justify-between bg-gray-800/50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-400 text-xs font-bold font-mono w-7">{s}</span>
+                    <span className="text-white text-sm font-semibold">{roster[i].n}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-gray-500 text-xs font-mono">{roster[i].t} {roster[i].y}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-1 mt-4 justify-center">
+              {record.games.map((g, i) => (
+                <div key={i} className={`w-6 h-6 rounded text-[10px] flex items-center justify-center font-bold
+                  ${g === "W" ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                  {g}
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-4">
+              <div className="text-gray-700 text-xs font-mono">RunItPerfect.com</div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <button onClick={resetGame}
+              className="flex-1 bg-green-500 hover:bg-green-400 text-gray-950 font-bold py-3 rounded-lg transition-all active:scale-95">
+              PLAY AGAIN
+            </button>
+          </div>
+
+          {isPerfect && (
+            <div className="text-center mt-6">
+              <div className="text-yellow-400 text-2xl mb-1">🏆</div>
+              <div className="text-yellow-400 text-sm font-bold">You ran it perfect.</div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-gray-500">Loading...</div>;
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(RunItPerfect));
+</script>
+</body>
+</html>
